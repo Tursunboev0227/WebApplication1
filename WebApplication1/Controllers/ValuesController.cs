@@ -30,9 +30,6 @@ namespace WebApplication1.Controllers
                 connection.Open();
 
                 return connection.Query<Student>(sql).ToList();
-
-
-
             }
         }
 
@@ -52,6 +49,54 @@ namespace WebApplication1.Controllers
                 return viewStudent;
             }
         }
+
+        [HttpPut]
+        public StudentDTO PutWithDapper(StudentDTO viewStudent,int id)
+        {
+            var sql = $"update students set full_name = @fullname,grade = @grade,avg_score = @avgScore where id = {id} ";
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(CONNECTIONSTRING))
+            {
+                connection.Execute(sql, new StudentDTO
+                {
+                    fullName = viewStudent.fullName,
+                    grade = viewStudent.grade,
+                    avgScore = viewStudent.avgScore,
+                });
+
+                return viewStudent;
+            }
+
+        }
+
+        [HttpDelete]
+
+        public string deleteWithDapper(int id)
+        {
+            var sql = $"delete from students where id = @id ";
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(CONNECTIONSTRING))
+            {
+
+                connection.Execute(sql,new {id});
+                return "Deleted";
+            }
+        }
+
+        [HttpPatch]
+        public string updateStudentFullaNameWithDapper(int id,string fullName)
+        {
+            var sql = $"update students set full_name = @fullName where id = @id";
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(CONNECTIONSTRING))
+            {
+
+                connection.Execute(sql, new {fullName, id });
+                return "Updated";
+            }
+        }
+
+
         [HttpGet]
         public List<Student> Get()
         {
@@ -70,7 +115,7 @@ namespace WebApplication1.Controllers
                         students.Add(new Student()
                         {
                             Id = reader.GetInt32(0),
-                            fullName = reader.GetString(1),
+                            full_name = reader.GetString(1),
                             grade = reader.GetInt32(2),
                             avgScore = reader.GetDouble(3)
                         });
@@ -105,9 +150,26 @@ namespace WebApplication1.Controllers
         }
 
         // PUT api/<ValuesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpPut]
+        public StudentDTO Put(StudentDTO student,int id)
         {
+            try
+            {
+
+                using (NpgsqlConnection connection = new NpgsqlConnection(CONNECTIONSTRING))
+                {
+                    connection.Open();
+
+                    using NpgsqlCommand cmd = new NpgsqlCommand($"update from students set fulla_name = '{student.fullName}',grade = {student.grade}, avg_score = {student.avgScore});");
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch
+            {
+               
+            }
+            return student;
+
         }
 
         // DELETE api/<ValuesController>/5
@@ -124,6 +186,26 @@ namespace WebApplication1.Controllers
                     using NpgsqlCommand cmd = new NpgsqlCommand($"delete from students where id = {id};", connection);
                     cmd.ExecuteNonQuery();
                     return "All right";
+                }
+            }
+            catch
+            {
+                return " Not found";
+            }
+        }
+        [HttpPatch]
+        public string UpdateStudentsFullName(int id,string fullaName)
+        {
+            try
+            {
+
+                using (NpgsqlConnection connection = new NpgsqlConnection(CONNECTIONSTRING))
+                {
+                    connection.Open();
+
+                    using NpgsqlCommand cmd = new NpgsqlCommand($"update students set full_name = '{fullaName}' where id = {id};", connection);
+                    cmd.ExecuteNonQuery();
+                    return "updated";
                 }
             }
             catch
